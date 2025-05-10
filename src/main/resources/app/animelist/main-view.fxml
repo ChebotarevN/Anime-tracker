@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="TOP_CENTER" minHeight="1200.0" minWidth="800.0" prefWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.animelist.Controller">
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+    <children>
+        <ComboBox fx:id="workMode" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="Выберите способ работы таблицы" />
+        <TableView fx:id="animeTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="600.0" prefHeight="200.0">
+            <columns>
+                <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
+                <TableColumn fx:id="colPicture" prefWidth="100.0" text="Фото" />
+                <TableColumn fx:id="colTitle" prefWidth="150.0" text="Название" />
+            <TableColumn fx:id="colStatus" prefWidth="100.0" text="Описание" />
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            </columnResizePolicy>
+        </TableView>
+        <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+            <children>
+                <Button mnemonicParsing="false" onAction="#handleAddAnime" text="Добавить" />
+                <Button mnemonicParsing="false" onAction="#handleChangeAnime" text="Изменить" />
+                <Button mnemonicParsing="false" onAction="#handleDeleteAnime" text="Удалить" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

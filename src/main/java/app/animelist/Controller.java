@@ -67,7 +67,7 @@ public class Controller {
                 new SimpleIntegerProperty(cellData.getValue().getMaxEpisode()).asObject());
         colCurEp.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getCurrectEpisode()).asObject());
-        workMode.setItems(FXCollections.observableArrayList(AnimeFabrica.FILE, AnimeFabrica.API));
+        workMode.setItems(FXCollections.observableArrayList(AnimeFabrica.FILE, AnimeFabrica.API, AnimeFabrica.BD));
         workMode.getSelectionModel().selectedIndexProperty().addListener(
                 (_, _, _) -> {
                     try {

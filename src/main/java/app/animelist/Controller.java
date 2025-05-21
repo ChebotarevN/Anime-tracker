@@ -11,14 +11,20 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Controller {
     @FXML
@@ -32,7 +38,17 @@ public class Controller {
     @FXML
     private TableColumn<Anime, Status> colStatus;
     @FXML
+    private TableColumn<Anime, Integer> colMaxEp;
+    @FXML
+    private TableColumn<Anime, Integer> colCurEp;
+    @FXML
     private ComboBox<String> workMode;
+    @FXML
+    private Label filePath;
+    @FXML
+    private VBox fileBox;
+    @FXML
+    private ComboBox<String> statusList;
 
     private AnimeDAO animeList;
     private ObservableList<Anime> animeData;
@@ -47,7 +63,11 @@ public class Controller {
                 new SimpleObjectProperty<>(cellData.getValue().getPicture()));
         colStatus.setCellValueFactory(cellData ->
                 new SimpleObjectProperty<>(cellData.getValue().getStatus()));
-        workMode.setItems(FXCollections.observableArrayList(AnimeFabrica.FILE));
+        colMaxEp.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getMaxEpisode()).asObject());
+        colCurEp.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getCurrectEpisode()).asObject());
+        workMode.setItems(FXCollections.observableArrayList(AnimeFabrica.FILE, AnimeFabrica.API));
         workMode.getSelectionModel().selectedIndexProperty().addListener(
                 (_, _, _) -> {
                     try {
@@ -58,9 +78,75 @@ public class Controller {
                         throw new RuntimeException(e);
                     }
                 });
+        statusList.setItems(FXCollections.observableArrayList("Все статусы", Status.WATCHING.toString(),
+                Status.COMPLETED.toString(), Status.PLAN_TO_WATCH.toString(), Status.ON_HOLD.toString(), Status.DROPPED.toString()));
+        statusList.setValue("Все статусы");
+        statusList.getSelectionModel().selectedIndexProperty().addListener(
+                (_, _, _) -> {
+                    updateTable();
+                });
+    }
+
+    private void updateTable() {
+        List<Anime> list = animeList.getAllAnimes();
+        switch (statusList.getValue()) {
+            case "Смотрю":
+                list = list.stream()
+                        .filter(anime -> anime.getStatus() == Status.WATCHING)
+                        .collect(Collectors.toList());
+                animeData = FXCollections.observableArrayList(list);
+                break;
+            case "Просмотрено":
+                list = list.stream()
+                        .filter(anime -> anime.getStatus() == Status.COMPLETED)
+                        .collect(Collectors.toList());
+                animeData = FXCollections.observableArrayList(list);
+                break;
+            case "Отложено":
+                list = list.stream()
+                        .filter(anime -> anime.getStatus() == Status.ON_HOLD)
+                        .collect(Collectors.toList());
+                animeData = FXCollections.observableArrayList(list);
+                break;
+            case "Брошено":
+                list = list.stream()
+                        .filter(anime -> anime.getStatus() == Status.DROPPED)
+                        .collect(Collectors.toList());
+                animeData = FXCollections.observableArrayList(list);
+                break;
+            case "Запланировано":
+                list = list.stream()
+                        .filter(anime -> anime.getStatus() == Status.PLAN_TO_WATCH)
+                        .collect(Collectors.toList());
+                animeData = FXCollections.observableArrayList(list);
+                break;
+            default:
+                animeData = FXCollections.observableArrayList(animeList.getAllAnimes());
+                break;
+        }
+        animeTable.setItems(animeData);
     }
 
     public void changeWorkMode() throws Exception {
+        if (Objects.equals(workMode.getValue(), AnimeFabrica.FILE)) {
+            File f = new File("src/main/resources/setting.txt");
+            if (f.exists()) {
+                Scanner in = new Scanner(f);
+                if (in.hasNextLine()) {
+                    String path = in.nextLine();
+                    filePath.setText(path);
+                }
+            } else {
+                File newFile = Controller.selectFile();
+                f.createNewFile();
+                FileWriter writer = new FileWriter(f);
+                writer.write(newFile.getPath());
+                writer.close();
+            }
+            fileBox.setVisible(true);
+        } else {
+            fileBox.setVisible(false);
+        }
         animeList = AnimeFabrica.createDAO(workMode.getValue());
         animeData = FXCollections.observableArrayList(animeList.getAllAnimes());
         animeTable.setItems(animeData);
@@ -85,6 +171,10 @@ public class Controller {
         ComboBox<Status> statusComboBox = new ComboBox<>(FXCollections.observableArrayList(Status.WATCHING,
                 Status.COMPLETED, Status.PLAN_TO_WATCH, Status.ON_HOLD, Status.DROPPED));
         statusComboBox.setPromptText("Выберите статус аниме");
+        TextField maxEpisode = new TextField();
+        maxEpisode.setPromptText("Введите количество серий в аниме");
+        TextField currentEpisode = new TextField();
+        currentEpisode.setPromptText("Введите номер серии, которую вы посмотрели");
 
         GridPane grid = new GridPane();
         grid.setHgap(5);
@@ -95,6 +185,10 @@ public class Controller {
         grid.add(pictureField, 1, 1);
         grid.add(new Label("Статус:"), 0, 2);
         grid.add(statusComboBox, 1, 2);
+        grid.add(new Label("Количество серий в аниме:"), 0, 3);
+        grid.add(maxEpisode, 1, 3);
+        grid.add(new Label("Просмотренных серий:"), 0, 4);
+        grid.add(currentEpisode, 1, 4);
         dialog.getDialogPane().setContent(grid);
 
         // Обработка результата
@@ -107,7 +201,9 @@ public class Controller {
                             0,
                             pictureField.getText(),
                             titleField.getText(),
-                            statusComboBox.getValue()
+                            statusComboBox.getValue(),
+                            Integer.parseInt(maxEpisode.getText()),
+                            Integer.parseInt(currentEpisode.getText())
                     );
                 }
             } catch (NullPointerException e) {
@@ -119,8 +215,12 @@ public class Controller {
         });
         dialog.showAndWait().ifPresent(anime -> {
             if (anime != null) {
-                animeList.addAnime(anime);
-                animeData.setAll(animeList.getAllAnimes());
+                try {
+                    animeList.addAnime(anime);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                updateTable();
             }
         });
     }
@@ -149,6 +249,10 @@ public class Controller {
         ComboBox<Status> statusComboBox = new ComboBox<>(FXCollections.observableArrayList(Status.WATCHING,
                 Status.COMPLETED, Status.PLAN_TO_WATCH, Status.ON_HOLD, Status.DROPPED));
         statusComboBox.setValue(selected.getStatus());
+        TextField maxEpisode = new TextField();
+        maxEpisode.setText(String.valueOf(selected.getMaxEpisode()));
+        TextField currentEpisode = new TextField();
+        currentEpisode.setText(String.valueOf(selected.getCurrectEpisode()));
 
         GridPane grid = new GridPane();
         grid.setHgap(5);
@@ -159,6 +263,10 @@ public class Controller {
         grid.add(pictureField, 1, 1);
         grid.add(new Label("Статус:"), 0, 2);
         grid.add(statusComboBox, 1, 2);
+        grid.add(new Label("Количество серий в аниме:"), 0, 3);
+        grid.add(maxEpisode, 1, 3);
+        grid.add(new Label("Просмотренных серий:"), 0, 4);
+        grid.add(currentEpisode, 1, 4);
         dialog.getDialogPane().setContent(grid);
 
         // Обработка результата
@@ -170,14 +278,18 @@ public class Controller {
                     Anime change = new Anime(selected.getId(),
                             pictureField.getText(),
                             titleField.getText(),
-                            statusComboBox.getValue());
+                            statusComboBox.getValue(),
+                            Integer.parseInt(maxEpisode.getText()),
+                            Integer.parseInt(currentEpisode.getText()));
                     animeList.updateAnime(change);
-                    animeData.setAll(animeList.getAllAnimes());
+                    updateTable();
                     return new Anime(
                             0,
                             pictureField.getText(),
                             titleField.getText(),
-                            statusComboBox.getValue()
+                            statusComboBox.getValue(),
+                            Integer.parseInt(maxEpisode.getText()),
+                            Integer.parseInt(currentEpisode.getText())
                     );
                 }
             } catch (NullPointerException e) {
@@ -192,7 +304,7 @@ public class Controller {
     }
 
     @FXML
-    private void handleDeleteAnime() {
+    private void handleDeleteAnime() throws IOException {
         Anime selected = animeTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             animeList.deleteAnime(selected.getId());
@@ -202,7 +314,7 @@ public class Controller {
         }
     }
 
-    private void showAlert(String title, String message) {
+    private static void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setHeaderText(null);

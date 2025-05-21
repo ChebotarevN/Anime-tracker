@@ -1,7 +1,13 @@
 package app.dao;
 
 import app.animelist.Controller;
+import app.dao.impl.APIAnimeDAO;
 import app.dao.impl.FileAnimeDAO;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class AnimeFabrica {
     public static String BD = "База данных";
@@ -12,9 +18,11 @@ public class AnimeFabrica {
         if (type.equalsIgnoreCase(BD)) {
             //return new DBAnimeDAO();
         } else if (type.equalsIgnoreCase(FILE)) {
-            return new FileAnimeDAO(Controller.selectFile());
+                File f = new File("src/main/resources/setting.txt");
+                Scanner in = new Scanner(f);
+                return new FileAnimeDAO(new File(in.nextLine()));
         } else if (type.equalsIgnoreCase(API)) {
-            //return new AnimeListDAO();
+            return new APIAnimeDAO();
         } else {
             throw new IllegalArgumentException("Invalid datasource type!");
         }

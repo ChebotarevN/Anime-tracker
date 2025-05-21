@@ -9,13 +9,24 @@ public class Anime {
     private String urlPicture;
     private String title;
     private Status status;
+    private int maxEpisode;
+    private int currectEpisode;
 
-    public Anime(int id, String URLpicture, String title, Status status) {
+    public Anime(int id, String URLpicture, String title, Status status, int maxEpisode, int currectEpisode) throws Exception {
         this.id = id;
         this.title = title;
         setUrlPicture(URLpicture);
         this.status = status;
+        this.maxEpisode = maxEpisode;
+        setCurrectEpisode(currectEpisode);
     }
+
+//    public Anime(int id, String URLpicture, String title, Status status) {
+//        this.id = id;
+//        this.title = title;
+//        setUrlPicture(URLpicture);
+//        this.status = status;
+//    }
 
     public int getId() {
         return id;
@@ -35,7 +46,7 @@ public class Anime {
 
     private void setPicture(String urlPicture) {
         ImageView imageView = new ImageView();
-        imageView.setFitWidth(150);
+        imageView.setFitWidth(200);
         imageView.setFitHeight(250);
         imageView.setImage(new Image(urlPicture));
         this.picture = imageView;
@@ -60,5 +71,22 @@ public class Anime {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public int getCurrectEpisode() {
+        return currectEpisode;
+    }
+
+    public void setCurrectEpisode(int currectEpisode) throws Exception {
+        if (currectEpisode > maxEpisode) {
+            throw new Exception("Текущая серия не может быть больше максимального");
+        } else if (currectEpisode == maxEpisode) {
+            status = Status.COMPLETED;
+        }
+        this.currectEpisode = currectEpisode;
+    }
+
+    public int getMaxEpisode() {
+        return maxEpisode;
     }
 }

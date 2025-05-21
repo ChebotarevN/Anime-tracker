@@ -25,7 +25,9 @@ public class FileAnimeDAO implements AnimeDAO {
             String picture = line[1];
             String title = line[2];
             Status status = Status.getEnum(line[3]);
-            Anime p = new Anime(id, picture, title, status);
+            int maxExpisode = Integer.parseInt(line[4]);
+            int currentEpisode = Integer.parseInt(line[5]);
+            Anime p = new Anime(id, picture, title, status, maxExpisode, currentEpisode);
             animes.add(p);
         }
     }
@@ -77,7 +79,7 @@ public class FileAnimeDAO implements AnimeDAO {
         try {
             FileWriter fileWriter = new FileWriter(file);
             for (Anime t : animes) {
-                fileWriter.append(t.getId() + "," + t.getUrlPicture() + "," + t.getTitle() + "," + t.getStatus() + "\n");
+                fileWriter.append(t.getId() + "," + t.getUrlPicture() + "," + t.getTitle() + "," + t.getStatus() + "," + t.getMaxEpisode() + "," + t.getCurrectEpisode() + "\n");
             }
             fileWriter.close();
         } catch (IOException e) {

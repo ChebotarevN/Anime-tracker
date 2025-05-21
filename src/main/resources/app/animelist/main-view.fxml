@@ -10,12 +10,36 @@
     </padding>
     <children>
         <ComboBox fx:id="workMode" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="Выберите способ работы таблицы" />
+      <VBox fx:id="fileBox" visible="false">
+         <children>
+            <HBox alignment="CENTER_LEFT">
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+               <children>
+                  <Label fx:id="filePath" minWidth="600.0" />
+               </children>
+            </HBox>
+            <HBox>
+               <children>
+                  <Button mnemonicParsing="false" text="Изменить файл" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <HBox alignment="CENTER_RIGHT">
+         <children>
+            <ComboBox fx:id="statusList" prefWidth="150.0" />
+         </children>
+      </HBox>
         <TableView fx:id="animeTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="600.0" prefHeight="200.0">
             <columns>
                 <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
                 <TableColumn fx:id="colPicture" prefWidth="100.0" text="Фото" />
                 <TableColumn fx:id="colTitle" prefWidth="150.0" text="Название" />
-            <TableColumn fx:id="colStatus" prefWidth="100.0" text="Описание" />
+            <TableColumn fx:id="colStatus" prefWidth="100.0" text="Статус" />
+            <TableColumn fx:id="colMaxEp" prefWidth="75.0" text="Количество серий" />
+            <TableColumn fx:id="colCurEp" prefWidth="75.0" text="Просмотренных серий" />
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

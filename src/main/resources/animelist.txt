@@ -1,5 +1,5 @@
-1,https://cdn.myanimelist.net/images/anime/1122/96435.webp,Koe no Katachi,Смотрю,1,0
-2,https://cdn.myanimelist.net/images/anime/1935/127974.jpg,Steins;Gate,Смотрю,24,2
-3,https://cdn.myanimelist.net/images/anime/4/19644.jpg,Cowboy Bebop,Запланировано,26,5
+1,https://cdn.myanimelist.net/images/anime/1122/96435.jpg,Koe no Katachi,Смотрю,1,0
+2,https://cdn.myanimelist.net/images/anime/1935/127974.webp,Steins;Gate,Смотрю,24,2
+3,https://cdn.myanimelist.net/images/anime/4/19644.webp,Cowboy Bebop,Запланировано,26,5
 4,https://cdn.myanimelist.net/images/anime/1208/94745.jpg,Fullmetal Alchemist: Brotherhood,Просмотрено,64,64
 5,https://cdn.myanimelist.net/images/anime/1015/138006.webp,Sousou no Frieren,Запланировано,28,0

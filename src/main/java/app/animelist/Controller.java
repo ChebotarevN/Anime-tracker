@@ -148,8 +148,7 @@ public class Controller {
             fileBox.setVisible(false);
         }
         animeList = AnimeFabrica.createDAO(workMode.getValue());
-        animeData = FXCollections.observableArrayList(animeList.getAllAnimes());
-        animeTable.setItems(animeData);
+        updateTable();
     }
 
     @FXML

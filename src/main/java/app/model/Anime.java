@@ -17,16 +17,9 @@ public class Anime {
         this.title = title;
         setUrlPicture(URLpicture);
         this.status = status;
-        this.maxEpisode = maxEpisode;
+        setMaxEpisode(maxEpisode);
         setCurrectEpisode(currectEpisode);
     }
-
-//    public Anime(int id, String URLpicture, String title, Status status) {
-//        this.id = id;
-//        this.title = title;
-//        setUrlPicture(URLpicture);
-//        this.status = status;
-//    }
 
     public int getId() {
         return id;
@@ -88,5 +81,12 @@ public class Anime {
 
     public int getMaxEpisode() {
         return maxEpisode;
+    }
+
+    public void setMaxEpisode(int maxEpisode) {
+        if (currectEpisode != maxEpisode && status == Status.COMPLETED) {
+            status = Status.PLAN_TO_WATCH;
+        }
+        this.maxEpisode = maxEpisode;
     }
 }

@@ -52,5 +52,6 @@
                 <Button mnemonicParsing="false" onAction="#handleDeleteAnime" text="Удалить" />
             </children>
         </HBox>
+      <Button mnemonicParsing="false" onAction="#synchron" text="Синхронизация" />
     </children>
 </VBox>

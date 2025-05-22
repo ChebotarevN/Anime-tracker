@@ -1,5 +1,6 @@
 package app.animelist;
 
+import app.Synchronization;
 import app.dao.AnimeDAO;
 import app.dao.AnimeFabrica;
 import app.model.Anime;
@@ -20,7 +21,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
@@ -326,5 +326,15 @@ public class Controller {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Текстовый файл (.txt)", ".txt"));
         return fileChooser.showOpenDialog(null);
+    }
+
+    @FXML
+    public void synchron() throws Exception {
+        Synchronization synchronization = new Synchronization();
+
+        synchronization.sync(AnimeFabrica.createDAO(AnimeFabrica.FILE),
+                AnimeFabrica.createDAO(AnimeFabrica.BD),
+                AnimeFabrica.createDAO(AnimeFabrica.API));
+        changeWorkMode();
     }
 }

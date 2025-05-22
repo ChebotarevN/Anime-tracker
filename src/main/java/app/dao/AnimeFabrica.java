@@ -1,13 +1,10 @@
 package app.dao;
 
-import app.animelist.Controller;
 import app.dao.impl.APIAnimeDAO;
 import app.dao.impl.DBAnimeDAO;
 import app.dao.impl.FileAnimeDAO;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.util.Objects;
 import java.util.Scanner;
 
 public class AnimeFabrica {

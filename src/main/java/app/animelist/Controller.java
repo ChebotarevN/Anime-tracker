@@ -1,6 +1,6 @@
 package app.animelist;
 
-import app.Synchronization;
+import app.service.Synchronization;
 import app.dao.AnimeDAO;
 import app.dao.AnimeFabrica;
 import app.model.Anime;

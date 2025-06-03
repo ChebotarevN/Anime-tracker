@@ -1,60 +1,51 @@
 package app.animelist;
 
-import app.service.Synchronization;
 import app.dao.AnimeDAO;
 import app.dao.AnimeFabrica;
 import app.model.Anime;
 import app.model.Status;
+import app.service.AnimeService;
+import app.service.Synchronization;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class Controller {
-    @FXML
-    private TableView<Anime> animeTable;
-    @FXML
-    private TableColumn<Anime, Integer> colId;
-    @FXML
-    private TableColumn<Anime, String> colTitle;
-    @FXML
-    private TableColumn<Anime, ImageView> colPicture;
-    @FXML
-    private TableColumn<Anime, Status> colStatus;
-    @FXML
-    private TableColumn<Anime, Integer> colMaxEp;
-    @FXML
-    private TableColumn<Anime, Integer> colCurEp;
-    @FXML
-    private ComboBox<String> workMode;
-    @FXML
-    private Label filePath;
-    @FXML
-    private VBox fileBox;
-    @FXML
-    private ComboBox<String> statusList;
+    @FXML private TableView<Anime> animeTable;
+    @FXML private TableColumn<Anime, Integer> colId;
+    @FXML private TableColumn<Anime, String> colTitle;
+    @FXML private TableColumn<Anime, ImageView> colPicture;
+    @FXML private TableColumn<Anime, Status> colStatus;
+    @FXML private TableColumn<Anime, Integer> colMaxEp;
+    @FXML private TableColumn<Anime, Integer> colCurEp;
+    @FXML private ComboBox<String> workMode;
+    @FXML private Label filePath;
+    @FXML private VBox fileBox;
+    @FXML private ComboBox<String> statusList;
 
-    private AnimeDAO animeList;
+    private AnimeService animeService;
     private ObservableList<Anime> animeData;
 
     @FXML
     public void initialize() {
+        setupTableColumns();
+        setupWorkModeComboBox();
+        setupStatusFilter();
+    }
+
+    private void setupTableColumns() {
         colId.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getId()).asObject());
         colTitle.setCellValueFactory(cellData ->
@@ -67,159 +58,88 @@ public class Controller {
                 new SimpleIntegerProperty(cellData.getValue().getMaxEpisode()).asObject());
         colCurEp.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getCurrectEpisode()).asObject());
-        workMode.setItems(FXCollections.observableArrayList(AnimeFabrica.FILE, AnimeFabrica.API, AnimeFabrica.BD));
-        workMode.getSelectionModel().selectedIndexProperty().addListener(
-                (_, _, _) -> {
+    }
+
+    private void setupWorkModeComboBox() {
+        workMode.setItems(FXCollections.observableArrayList(
+                AnimeFabrica.FILE,
+                AnimeFabrica.API,
+                AnimeFabrica.BD
+        ));
+        workMode.getSelectionModel().selectedItemProperty().addListener(
+                (_, _, newMode) -> {
                     try {
-                        changeWorkMode();
-                    } catch (FileNotFoundException e) {
-                        throw new RuntimeException(e);
+                        changeWorkMode(newMode);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        showAlert("Ошибка", e.getMessage());
                     }
                 });
-        statusList.setItems(FXCollections.observableArrayList("Все статусы", Status.WATCHING.toString(),
-                Status.COMPLETED.toString(), Status.PLAN_TO_WATCH.toString(), Status.ON_HOLD.toString(), Status.DROPPED.toString()));
+    }
+
+    private void setupStatusFilter() {
+        statusList.setItems(FXCollections.observableArrayList(
+                "Все статусы",
+                Status.WATCHING.toString(),
+                Status.COMPLETED.toString(),
+                Status.PLAN_TO_WATCH.toString(),
+                Status.ON_HOLD.toString(),
+                Status.DROPPED.toString()
+        ));
         statusList.setValue("Все статусы");
-        statusList.getSelectionModel().selectedIndexProperty().addListener(
-                (_, _, _) -> {
-                    updateTable();
-                });
+        statusList.getSelectionModel().selectedItemProperty().addListener(
+                (_, _, _) -> updateTable());
     }
 
-    private void updateTable() {
-        List<Anime> list = animeList.getAllAnimes();
-        switch (statusList.getValue()) {
-            case "Смотрю":
-                list = list.stream()
-                        .filter(anime -> anime.getStatus() == Status.WATCHING)
-                        .collect(Collectors.toList());
-                animeData = FXCollections.observableArrayList(list);
-                break;
-            case "Просмотрено":
-                list = list.stream()
-                        .filter(anime -> anime.getStatus() == Status.COMPLETED)
-                        .collect(Collectors.toList());
-                animeData = FXCollections.observableArrayList(list);
-                break;
-            case "Отложено":
-                list = list.stream()
-                        .filter(anime -> anime.getStatus() == Status.ON_HOLD)
-                        .collect(Collectors.toList());
-                animeData = FXCollections.observableArrayList(list);
-                break;
-            case "Брошено":
-                list = list.stream()
-                        .filter(anime -> anime.getStatus() == Status.DROPPED)
-                        .collect(Collectors.toList());
-                animeData = FXCollections.observableArrayList(list);
-                break;
-            case "Запланировано":
-                list = list.stream()
-                        .filter(anime -> anime.getStatus() == Status.PLAN_TO_WATCH)
-                        .collect(Collectors.toList());
-                animeData = FXCollections.observableArrayList(list);
-                break;
-            default:
-                animeData = FXCollections.observableArrayList(animeList.getAllAnimes());
-                break;
-        }
-        animeTable.setItems(animeData);
-    }
+    private void changeWorkMode(String mode) throws Exception {
+        AnimeDAO dao = AnimeFabrica.createDAO(mode);
+        animeService = new AnimeService(dao);
 
-    public void changeWorkMode() throws Exception {
-        if (Objects.equals(workMode.getValue(), AnimeFabrica.FILE)) {
-            File f = new File("src/main/resources/setting.txt");
-            if (f.exists()) {
-                Scanner in = new Scanner(f);
-                if (in.hasNextLine()) {
-                    String path = in.nextLine();
-                    filePath.setText(path);
-                }
-            } else {
-                File newFile = Controller.selectFile();
-                f.createNewFile();
-                FileWriter writer = new FileWriter(f);
-                writer.write(newFile.getPath());
-                writer.close();
-            }
+        if (mode.equals(AnimeFabrica.FILE)) {
             fileBox.setVisible(true);
+            updateFilePathLabel();
         } else {
             fileBox.setVisible(false);
         }
-        animeList = AnimeFabrica.createDAO(workMode.getValue());
+
         updateTable();
+    }
+
+    private void updateFilePathLabel() {
+        try {
+            Scanner scanner = new Scanner(new File("src/main/resources/setting.txt"));
+            if (scanner.hasNextLine()) {
+                filePath.setText(scanner.nextLine());
+            }
+            scanner.close();
+        } catch (Exception e) {
+            filePath.setText("Файл не выбран");
+        }
+    }
+
+    private void updateTable() {
+        if (animeService == null) return;
+
+        List<Anime> list;
+        if ("Все статусы".equals(statusList.getValue())) {
+            list = animeService.getAllAnimes();
+        } else {
+            Status status = Status.getEnum(statusList.getValue());
+            list = animeService.getAnimesByStatus(status);
+        }
+
+        animeData = FXCollections.observableArrayList(list);
+        animeTable.setItems(animeData);
     }
 
     @FXML
     private void handleAddAnime() {
-        // Создание диалогового окна
-        Dialog<Anime> dialog = new Dialog<>();
-        dialog.setTitle("Добавить Аниме");
-
-        // Кнопки
-        ButtonType addButton = new ButtonType("Добавить аниме", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelButton = new ButtonType("Отменить", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().addAll(addButton, cancelButton);
-
-        // Поля ввода
-        TextField titleField = new TextField();
-        titleField.setPromptText("Введите название аниме");
-        TextField pictureField = new TextField();
-        pictureField.setPromptText("Введите ссылку на фото");
-        ComboBox<Status> statusComboBox = new ComboBox<>(FXCollections.observableArrayList(Status.WATCHING,
-                Status.COMPLETED, Status.PLAN_TO_WATCH, Status.ON_HOLD, Status.DROPPED));
-        statusComboBox.setPromptText("Выберите статус аниме");
-        TextField maxEpisode = new TextField();
-        maxEpisode.setPromptText("Введите количество серий в аниме");
-        TextField currentEpisode = new TextField();
-        currentEpisode.setPromptText("Введите номер серии, которую вы посмотрели");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(5);
-        grid.setVgap(10);
-        grid.add(new Label("Название:"), 0, 0);
-        grid.add(titleField, 1, 0);
-        grid.add(new Label("Ссылка на фото:"), 0, 1);
-        grid.add(pictureField, 1, 1);
-        grid.add(new Label("Статус:"), 0, 2);
-        grid.add(statusComboBox, 1, 2);
-        grid.add(new Label("Количество серий в аниме:"), 0, 3);
-        grid.add(maxEpisode, 1, 3);
-        grid.add(new Label("Просмотренных серий:"), 0, 4);
-        grid.add(currentEpisode, 1, 4);
-        dialog.getDialogPane().setContent(grid);
-
-        // Обработка результата
-        dialog.setResultConverter(buttonType -> {
-            try {
-                if (buttonType == addButton) {
-                    if (Objects.equals(titleField.getText(), ""))
-                        throw new Exception("Пустая строка в названии аниме");
-                    return new Anime(
-                            0,
-                            pictureField.getText(),
-                            titleField.getText(),
-                            statusComboBox.getValue(),
-                            Integer.parseInt(maxEpisode.getText()),
-                            Integer.parseInt(currentEpisode.getText())
-                    );
-                }
-            } catch (NullPointerException e) {
-                showAlert("Ошибка ввода", "Выберите значение в поле статус");
-            } catch (Exception e) {
-                showAlert("Ошибка ввода", e.getMessage());
-            }
-            return null;
-        });
+        Dialog<Anime> dialog = createAnimeDialog("Добавить аниме", null);
         dialog.showAndWait().ifPresent(anime -> {
-            if (anime != null) {
-                try {
-                    animeList.addAnime(anime);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+            try {
+                animeService.addAnime(anime);
                 updateTable();
+            } catch (Exception e) {
+                showAlert("Ошибка", e.getMessage());
             }
         });
     }
@@ -228,112 +148,130 @@ public class Controller {
     private void handleChangeAnime() {
         Anime selected = animeTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showAlert("Ошибка изменения", "Выберите аниме для изменения!");
+            showAlert("Ошибка", "Выберите аниме для изменения!");
             return;
         }
-        // Создание диалогового окна
+
+        Dialog<Anime> dialog = createAnimeDialog("Изменить аниме", selected);
+        dialog.showAndWait().ifPresent(anime -> {
+            try {
+                anime.setId(selected.getId());
+                animeService.updateAnime(anime);
+                updateTable();
+            } catch (Exception e) {
+                showAlert("Ошибка", e.getMessage());
+            }
+        });
+    }
+
+    @FXML
+    private void handleDeleteAnime() {
+        Anime selected = animeTable.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            try {
+                animeService.deleteAnime(selected.getId());
+                updateTable();
+            } catch (Exception e) {
+                showAlert("Ошибка", e.getMessage());
+            }
+        } else {
+            showAlert("Ошибка", "Выберите аниме для удаления!");
+        }
+    }
+
+    @FXML
+    private void synchron() {
+        try {
+            AnimeService fileService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.FILE));
+            AnimeService dbService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.BD));
+            AnimeService apiService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.API));
+            new Synchronization().sync(fileService, dbService, apiService);
+            String currentMode = workMode.getValue();
+            animeService = new AnimeService(AnimeFabrica.createDAO(currentMode));
+            updateTable();
+            showAlert("Успех", "Синхронизация завершена успешно");
+        } catch (Exception e) {
+            showAlert("Ошибка синхронизации", e.getMessage());
+        }
+    }
+
+    private Dialog<Anime> createAnimeDialog(String title, Anime existingAnime) {
         Dialog<Anime> dialog = new Dialog<>();
-        dialog.setTitle("Изменить аниме");
+        dialog.setTitle(title);
 
-        // Кнопки
-        ButtonType addButton = new ButtonType("Изменить", ButtonBar.ButtonData.OK_DONE);
+        ButtonType confirmButton = new ButtonType(
+                existingAnime == null ? "Добавить" : "Сохранить",
+                ButtonBar.ButtonData.OK_DONE
+        );
         ButtonType cancelButton = new ButtonType("Отменить", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().addAll(addButton, cancelButton);
-
-        // Поля ввода
-        TextField titleField = new TextField();
-        titleField.setText(selected.getTitle());
-        TextField pictureField = new TextField();
-        pictureField.setText(selected.getUrlPicture());
-        ComboBox<Status> statusComboBox = new ComboBox<>(FXCollections.observableArrayList(Status.WATCHING,
-                Status.COMPLETED, Status.PLAN_TO_WATCH, Status.ON_HOLD, Status.DROPPED));
-        statusComboBox.setValue(selected.getStatus());
-        TextField maxEpisode = new TextField();
-        maxEpisode.setText(String.valueOf(selected.getMaxEpisode()));
-        TextField currentEpisode = new TextField();
-        currentEpisode.setText(String.valueOf(selected.getCurrectEpisode()));
+        dialog.getDialogPane().getButtonTypes().addAll(confirmButton, cancelButton);
 
         GridPane grid = new GridPane();
-        grid.setHgap(5);
+        grid.setHgap(10);
         grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+
+        TextField titleField = new TextField();
+        titleField.setPromptText("Название");
+        TextField pictureField = new TextField();
+        pictureField.setPromptText("URL изображения");
+        ComboBox<Status> statusCombo = new ComboBox<>(
+                FXCollections.observableArrayList(Status.values())
+        );
+        statusCombo.setPromptText("Статус");
+        TextField maxEpField = new TextField();
+        maxEpField.setPromptText("Всего серий");
+        TextField curEpField = new TextField();
+        curEpField.setPromptText("Просмотрено серий");
+
+        if (existingAnime != null) {
+            titleField.setText(existingAnime.getTitle());
+            pictureField.setText(existingAnime.getUrlPicture());
+            statusCombo.setValue(existingAnime.getStatus());
+            maxEpField.setText(String.valueOf(existingAnime.getMaxEpisode()));
+            curEpField.setText(String.valueOf(existingAnime.getCurrectEpisode()));
+        }
+
         grid.add(new Label("Название:"), 0, 0);
         grid.add(titleField, 1, 0);
-        grid.add(new Label("Ссылка на фото:"), 0, 1);
+        grid.add(new Label("Изображение:"), 0, 1);
         grid.add(pictureField, 1, 1);
         grid.add(new Label("Статус:"), 0, 2);
-        grid.add(statusComboBox, 1, 2);
-        grid.add(new Label("Количество серий в аниме:"), 0, 3);
-        grid.add(maxEpisode, 1, 3);
-        grid.add(new Label("Просмотренных серий:"), 0, 4);
-        grid.add(currentEpisode, 1, 4);
+        grid.add(statusCombo, 1, 2);
+        grid.add(new Label("Всего серий:"), 0, 3);
+        grid.add(maxEpField, 1, 3);
+        grid.add(new Label("Просмотрено:"), 0, 4);
+        grid.add(curEpField, 1, 4);
+
         dialog.getDialogPane().setContent(grid);
 
-        // Обработка результата
         dialog.setResultConverter(buttonType -> {
-            try {
-                if (buttonType == addButton) {
-                    if (Objects.equals(titleField.getText(), ""))
-                        throw new Exception("Пустая строка в названии аниме");
-                    Anime change = new Anime(selected.getId(),
-                            pictureField.getText(),
-                            titleField.getText(),
-                            statusComboBox.getValue(),
-                            Integer.parseInt(maxEpisode.getText()),
-                            Integer.parseInt(currentEpisode.getText()));
-                    animeList.updateAnime(change);
-                    updateTable();
+            if (buttonType == confirmButton) {
+                try {
                     return new Anime(
                             0,
                             pictureField.getText(),
                             titleField.getText(),
-                            statusComboBox.getValue(),
-                            Integer.parseInt(maxEpisode.getText()),
-                            Integer.parseInt(currentEpisode.getText())
+                            statusCombo.getValue(),
+                            Integer.parseInt(maxEpField.getText()),
+                            Integer.parseInt(curEpField.getText())
                     );
+                } catch (Exception e) {
+                    showAlert("Ошибка ввода", "Проверьте правильность введенных данных");
+                    return null;
                 }
-            } catch (NullPointerException e) {
-                showAlert("Ошибка ввода", "Выберите значение в поле статус");
-            } catch (Exception e) {
-                showAlert("Ошибка ввода", e.getMessage());
             }
             return null;
         });
-        dialog.showAndWait();
-        animeTable.refresh();
+
+        return dialog;
     }
 
-    @FXML
-    private void handleDeleteAnime() throws IOException {
-        Anime selected = animeTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            animeList.deleteAnime(selected.getId());
-            animeData.remove(selected);
-        } else {
-            showAlert("Ошибка удаления", "Выберите аниме для удаления!");
-        }
-    }
-
-    private static void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    public static File selectFile() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Текстовый файл (.txt)", ".txt"));
-        return fileChooser.showOpenDialog(null);
-    }
-
-    @FXML
-    public void synchron() throws Exception {
-        Synchronization synchronization = new Synchronization();
-
-        synchronization.sync(AnimeFabrica.createDAO(AnimeFabrica.FILE),
-                AnimeFabrica.createDAO(AnimeFabrica.BD),
-                AnimeFabrica.createDAO(AnimeFabrica.API));
-        changeWorkMode();
     }
 }

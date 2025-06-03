@@ -1,33 +1,35 @@
 package app.service;
 
-import app.dao.AnimeDAO;
 import app.model.Anime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Synchronization {
-    public void sync(AnimeDAO listFILE, AnimeDAO listBD, AnimeDAO listAPI) throws Exception {
-        List<Anime> list = listAPI.getAllAnimes();
-        for (Anime a: listFILE.getAllAnimes()) {
-            if (list.stream().noneMatch(p -> p.getTitle().equals(a.getTitle()))) {
-                list.add(a);
-            }
-        }
-        for (Anime a: listBD.getAllAnimes()) {
-            if (list.stream().noneMatch(p -> p.getTitle().equals(a.getTitle()))) {
-                list.add(a);
+    public void sync(AnimeService source1, AnimeService source2, AnimeService source3) throws Exception {
+        List<Anime> combinedList = new ArrayList<>(source1.getAllAnimes());
+
+        for (Anime anime : source2.getAllAnimes()) {
+            if (combinedList.stream().noneMatch(a -> a.getTitle().equals(anime.getTitle()))) {
+                combinedList.add(anime);
             }
         }
 
-        for (Anime a: list) {
-            if (listFILE.getAllAnimes().stream().noneMatch(p -> p.getTitle().equals(a.getTitle()))) {
-                listFILE.addAnime(a);
+        for (Anime anime : source3.getAllAnimes()) {
+            if (combinedList.stream().noneMatch(a -> a.getTitle().equals(anime.getTitle()))) {
+                combinedList.add(anime);
             }
-            if (listBD.getAllAnimes().stream().noneMatch(p -> p.getTitle().equals(a.getTitle()))) {
-                listBD.addAnime(a);
+        }
+
+        for (Anime anime : combinedList) {
+            if (source1.getAllAnimes().stream().noneMatch(a -> a.getTitle().equals(anime.getTitle()))) {
+                source1.addAnime(anime);
             }
-            if (listAPI.getAllAnimes().stream().noneMatch(p -> p.getTitle().equals(a.getTitle()))) {
-                listAPI.addAnime(a);
+            if (source2.getAllAnimes().stream().noneMatch(a -> a.getTitle().equals(anime.getTitle()))) {
+                source2.addAnime(anime);
+            }
+            if (source3.getAllAnimes().stream().noneMatch(a -> a.getTitle().equals(anime.getTitle()))) {
+                source3.addAnime(anime);
             }
         }
     }

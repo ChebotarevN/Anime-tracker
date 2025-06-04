@@ -1,6 +1,5 @@
 package app.ui;
 
-import app.dao.AnimeDAO;
 import app.dao.AnimeFabrica;
 import app.model.Anime;
 import app.model.Status;
@@ -17,9 +16,12 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Controller {
@@ -67,9 +69,9 @@ public class Controller {
                 AnimeFabrica.BD
         ));
         workMode.getSelectionModel().selectedItemProperty().addListener(
-                (_, _, newMode) -> {
+                (_, _, _) -> {
                     try {
-                        changeWorkMode(newMode);
+                        changeWorkMode();
                     } catch (Exception e) {
                         showAlert("Ошибка", e.getMessage());
                     }
@@ -90,18 +92,45 @@ public class Controller {
                 (_, _, _) -> updateTable());
     }
 
-    private void changeWorkMode(String mode) throws Exception {
-        AnimeDAO dao = AnimeFabrica.createDAO(mode);
-        animeService = new AnimeService(dao);
-
-        if (mode.equals(AnimeFabrica.FILE)) {
+    public void changeWorkMode() throws Exception {
+        if (Objects.equals(workMode.getValue(), AnimeFabrica.FILE)) {
+            File f = new File("src/main/resources/setting.txt");
+            if (f.exists()) {
+                Scanner in = new Scanner(f);
+                if (in.hasNextLine()) {
+                    String path = in.nextLine();
+                    filePath.setText(path);
+                } else {
+                    changeFilePath();
+                }
+                animeService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.FILE));
+            } else {
+                changeFilePath();
+                animeService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.FILE));
+            }
             fileBox.setVisible(true);
-            updateFilePathLabel();
         } else {
             fileBox.setVisible(false);
         }
 
         updateTable();
+    }
+
+    public void changeFilePath() {
+        try {
+            FileWriter fileWriter = new FileWriter("src/main/resources/setting.txt");
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Открыть файл");
+            FileChooser.ExtensionFilter extFilter = new
+                    FileChooser.ExtensionFilter("Текстовый файл (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+            File f = fileChooser.showOpenDialog(null);
+            fileWriter.write(f.getAbsolutePath());
+            fileWriter.close();
+            updateFilePathLabel();
+        } catch (Exception e) {
+            filePath.setText("Файл не удалось выбрать");
+        }
     }
 
     private void updateFilePathLabel() {
@@ -112,7 +141,7 @@ public class Controller {
             }
             scanner.close();
         } catch (Exception e) {
-            filePath.setText("Файл не выбран");
+            changeFilePath();
         }
     }
 

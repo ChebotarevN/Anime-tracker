@@ -22,7 +22,7 @@
             </HBox>
             <HBox>
                <children>
-                  <Button mnemonicParsing="false" text="Изменить файл" />
+                  <Button mnemonicParsing="false" onAction="#changeFilePath" text="Изменить файл" />
                </children>
             </HBox>
          </children>

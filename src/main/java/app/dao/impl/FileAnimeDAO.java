@@ -39,7 +39,12 @@ public class FileAnimeDAO implements AnimeDAO {
 
     @Override
     public Anime getAnimeById(int id) {
-        return animes.get(id);
+        for (Anime anime : animes) {
+            if (anime.getId() == id) {
+                return anime;
+            }
+        }
+        return null;
     }
 
     @Override

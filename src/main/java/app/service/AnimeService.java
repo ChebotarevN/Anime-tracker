@@ -29,11 +29,26 @@ public class AnimeService {
 
     public void addAnime(Anime anime) throws Exception {
         validateAnime(anime);
+        if (isDuplicate(anime)) {
+            throw new Exception("Аниме с таким названием и статусом уже существует");
+        }
         animeDAO.addAnime(anime);
     }
 
     public void updateAnime(Anime anime) throws Exception {
         validateAnime(anime);
+        Anime existingAnime = animeDAO.getAnimeById(anime.getId());
+        if (existingAnime == null) {
+            throw new Exception("Аниме не найдено");
+        }
+
+        // Проверяем дубликат только если изменилось название или статус
+        if (!existingAnime.getTitle().equalsIgnoreCase(anime.getTitle())
+                || existingAnime.getStatus() != anime.getStatus()) {
+            if (isDuplicate(anime)) {
+                throw new Exception("Аниме с таким названием и статусом уже существует");
+            }
+        }
         animeDAO.updateAnime(anime);
     }
 
@@ -51,5 +66,11 @@ public class AnimeService {
         if (anime.getCurrectEpisode() < 0 || anime.getCurrectEpisode() > anime.getMaxEpisode()) {
             throw new Exception("Некорректное количество просмотренных серий");
         }
+    }
+
+    private boolean isDuplicate(Anime anime) {
+        return animeDAO.getAllAnimes().stream()
+                .anyMatch(a -> a.getTitle().equalsIgnoreCase(anime.getTitle())
+                        && a.getStatus() == anime.getStatus());
     }
 }

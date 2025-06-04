@@ -111,6 +111,12 @@ public class Controller {
             fileBox.setVisible(true);
         } else {
             fileBox.setVisible(false);
+            if (Objects.equals(workMode.getValue(), AnimeFabrica.BD)) {
+                animeService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.BD));
+            } else {
+                animeService = new AnimeService(AnimeFabrica.createDAO(AnimeFabrica.API));
+            }
+
         }
 
         updateTable();

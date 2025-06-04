@@ -1,4 +1,4 @@
-package app.animelist;
+package app.ui;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

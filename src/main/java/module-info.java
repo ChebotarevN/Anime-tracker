@@ -6,6 +6,6 @@ module app.animelist {
     requires sqlite.jdbc;
 
 
-    opens app.animelist to javafx.fxml;
-    exports app.animelist;
+    opens app.ui to javafx.fxml;
+    exports app.ui;
 }

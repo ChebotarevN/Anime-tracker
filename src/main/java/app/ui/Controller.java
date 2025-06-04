@@ -1,4 +1,4 @@
-package app.animelist;
+package app.ui;
 
 import app.dao.AnimeDAO;
 import app.dao.AnimeFabrica;

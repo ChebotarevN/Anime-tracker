@@ -8,4 +8,7 @@ module app.animelist {
 
     opens app.ui to javafx.fxml;
     exports app.ui;
+    exports app.model;
+    exports app.service;
+    exports app.dao;
 }

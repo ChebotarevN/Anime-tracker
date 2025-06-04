@@ -41,7 +41,7 @@ public class AnimeService {
         animeDAO.deleteAnime(id);
     }
 
-    private void validateAnime(Anime anime) throws Exception {
+    protected void validateAnime(Anime anime) throws Exception {
         if (anime.getTitle() == null || anime.getTitle().isEmpty()) {
             throw new Exception("Название аниме не может быть пустым");
         }

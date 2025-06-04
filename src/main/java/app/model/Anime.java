@@ -20,11 +20,11 @@ public class Anime {
     /**
      * Конструктор для создания объекта аниме.
      *
-     * @param id уникальный идентификатор
-     * @param URLpicture URL-адрес изображения обложки
-     * @param title название аниме
-     * @param status статус просмотра
-     * @param maxEpisode общее количество серий
+     * @param id             уникальный идентификатор
+     * @param URLpicture     URL-адрес изображения обложки
+     * @param title          название аниме
+     * @param status         статус просмотра
+     * @param maxEpisode     общее количество серий
      * @param currectEpisode количество просмотренных серий
      * @throws Exception если параметры недопустимы
      */
@@ -86,8 +86,7 @@ public class Anime {
             imageView.setImage(new Image(urlPicture));
             this.picture = imageView;
         } catch (Exception e) {
-            this.urlPicture = null;
-            picture = null;
+            picture = new ImageView();
         }
     }
 
@@ -150,12 +149,9 @@ public class Anime {
      * Устанавливает количество просмотренных серий.
      *
      * @param currectEpisode новое количество просмотренных серий
-     * @throws Exception если количество превышает общее число серий
      */
     public void setCurrectEpisode(int currectEpisode) throws Exception {
-        if (currectEpisode > maxEpisode) {
-            throw new Exception("Текущая серия не может быть больше максимального");
-        } else if (currectEpisode == maxEpisode) {
+        if (currectEpisode == maxEpisode) {
             status = Status.COMPLETED;
         }
         this.currectEpisode = currectEpisode;

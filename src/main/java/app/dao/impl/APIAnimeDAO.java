@@ -101,7 +101,7 @@ public class APIAnimeDAO implements AnimeDAO {
         con.disconnect();
     }
 
-    private String readURL(HttpURLConnection con) {
+    private String readURL(HttpURLConnection con) throws Exception {
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
             String inputLine;
             final StringBuilder content = new StringBuilder();
@@ -111,7 +111,7 @@ public class APIAnimeDAO implements AnimeDAO {
             return content.toString();
         } catch (final Exception ex) {
             ex.printStackTrace();
-            return "";
+            throw new Exception("Нет доступа к MyAnimeList API");
         }
     }
 

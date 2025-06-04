@@ -75,6 +75,7 @@ class AnimeServiceTest {
 
     @Test
     void testUpdateAnime() throws Exception {
+        when(animeDao.getAnimeById(1)).thenReturn(anime1);
         Anime updatedAnime = new Anime(1, "http://new_img.jpg", "Attack on Titan Final",
                 Status.COMPLETED, 25, 25);
 
@@ -135,6 +136,8 @@ class AnimeServiceTest {
 
     @Test
     void testAutoCompleteStatus() throws Exception {
+        when(animeDao.getAnimeById(4)).thenReturn(new Anime(4, "http://img4.jpg", "Naruto",
+                Status.WATCHING, 220, 50));
         Anime anime = new Anime(4, "http://img4.jpg", "Short Anime",
                 Status.WATCHING, 5, 5);
 
